@@ -34,6 +34,7 @@ systemctl restart nginx
 
 # Configure PHP
 cp /vagrant/vagrant/etc/php/php.ini /etc/php/7.4/fpm/conf.d
+cp /vagrant/vagrant/etc/php/php.ini /etc/php/7.4/cli/conf.d
 cp /vagrant/vagrant/etc/php/xdebug.ini /etc/php/7.4/mods-available
 
 systemctl restart php7.4-fpm
@@ -42,8 +43,7 @@ systemctl restart php7.4-fpm
 mysql -uroot -p -e "CREATE DATABASE app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
 mysql -uroot -p -e "CREATE DATABASE app_tests CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
 mysql -uroot -p -e "CREATE USER 'vagrant'@'%' IDENTIFIED BY '$mysqlpass'"
-mysql -uroot -p -e "GRANT ALL PRIVILEGES ON app.* TO 'vagrant'@'%' WITH GRANT OPTION"
-mysql -uroot -p -e "GRANT ALL PRIVILEGES ON app_tests.* TO 'vagrant'@'%' WITH GRANT OPTION"
+mysql -uroot -p -e "GRANT ALL PRIVILEGES ON *.* TO 'vagrant'@'%' WITH GRANT OPTION"
 mysql -uroot -p -e "FLUSH PRIVILEGES"
 
 sed -i "s/.*bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf

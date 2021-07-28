@@ -10,25 +10,30 @@ echo "cd /vagrant" >> /home/vagrant/.profile
 debconf-set-selections <<< "mysql-community-server mysql-community-server/root-pass password $mysqlpass"
 debconf-set-selections <<< "mysql-community-server mysql-community-server/re-root-pass password $mysqlpass"
 
-# Update OS software
-apt update
-apt upgrade -y
-apt dist-upgrade -y
-apt autoremove -y
-
 # Install software
-apt install nginx mysql-server redis-server unzip unrar htop build-essential \
+apt-get update && apt-get install nginx mysql-server redis-server \
+    ruby ruby-dev libsqlite3-dev unzip unrar htop build-essential \
     php7.4-fpm php7.4-mysql php7.4-curl php7.4-cli php7.4-intl php7.4-gd php7.4-zip \
     php7.4-bcmath php7.4-mbstring php7.4-bz2 php7.4-xml php-xdebug php7.4-soap -y
+
+# Install MailCatcher
+gem install mailcatcher
+
+# Install & configure Composer
+curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+echo "export PATH=\"\$PATH:/home/vagrant/.config/composer/vendor/bin\"" >> /home/vagrant/.profile
 
 # Configure NGINX
 sed -i "s/# server_names_hash_bucket_size 64/server_names_hash_bucket_size 64/g" /etc/nginx/nginx.conf
 
-cp /vagrant/vagrant/etc/nginx/app.local /etc/nginx/sites-available
-cp /vagrant/vagrant/etc/nginx/mailcatcher.local /etc/nginx/sites-available
+nginx_config_dir="/vagrant/vagrant/etc/nginx/*"
 
-ln -s /etc/nginx/sites-available/app.local /etc/nginx/sites-enabled/
-ln -s /etc/nginx/sites-available/mailcatcher.local /etc/nginx/sites-enabled/
+for file in $nginx_config_dir
+do
+    cp $file /etc/nginx/sites-available
+    ln -s /etc/nginx/sites-available/$(basename $file) /etc/nginx/sites-enabled/
+done
 
 systemctl restart nginx
 
@@ -36,6 +41,9 @@ systemctl restart nginx
 cp /vagrant/vagrant/etc/php/php.ini /etc/php/7.4/fpm/conf.d
 cp /vagrant/vagrant/etc/php/php.ini /etc/php/7.4/cli/conf.d
 cp /vagrant/vagrant/etc/php/xdebug.ini /etc/php/7.4/mods-available
+
+sed -i "s/user = www-data/user = vagrant/g" /etc/php/7.4/fpm/pool.d/www.conf
+sed -i "/group = www-data/group = vagrant/g" /etc/php/7.4/fpm/pool.d/www.conf
 
 systemctl restart php7.4-fpm
 
@@ -49,14 +57,3 @@ mysql -uroot -p -e "FLUSH PRIVILEGES"
 sed -i "s/.*bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
 
 systemctl restart mysql
-
-# Install MailCatcher
-apt install ruby ruby-dev libsqlite3-dev -y
-gem install mailcatcher
-
-# Install Composer
-curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-cat << EOF >> /home/vagrant/.profile
-export PATH="$PATH:/home/vagrant/.config/composer/vendor/bin"
-EOF

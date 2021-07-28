@@ -5,8 +5,6 @@ Vagrant.configure("2") do |config|
 
   config.vm.provider "virtualbox" do |v|
     v.memory = 2048
-    v.customize ["modifyvm", :id, "--uart1", "0x3F8", "4"]
-    v.customize ["modifyvm", :id, "--uartmode1", "file", File::NULL]
   end
 
   config.vm.synced_folder "./", "/vagrant", id: "vagrant-root"

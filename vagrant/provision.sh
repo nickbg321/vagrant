@@ -6,10 +6,6 @@ export DEBIAN_FRONTEND=noninteractive
 # Change working dir to /vagrant on login
 echo "cd /vagrant" >> /home/vagrant/.profile
 
-# Prepare root password for MySQL
-debconf-set-selections <<< "mysql-community-server mysql-community-server/root-pass password $mysqlpass"
-debconf-set-selections <<< "mysql-community-server mysql-community-server/re-root-pass password $mysqlpass"
-
 # Install software
 apt-get update && apt-get install nginx mysql-server redis-server \
     ruby ruby-dev libsqlite3-dev unzip unrar htop build-essential \
@@ -31,8 +27,8 @@ nginx_config_dir="/vagrant/vagrant/etc/nginx/*"
 
 for file in $nginx_config_dir
 do
-    cp $file /etc/nginx/sites-available
-    ln -s /etc/nginx/sites-available/$(basename $file) /etc/nginx/sites-enabled/
+    cp "$file" /etc/nginx/sites-available
+    ln -s /etc/nginx/sites-available/"$(basename "$file")" /etc/nginx/sites-enabled/
 done
 
 systemctl restart nginx
@@ -43,16 +39,16 @@ cp /vagrant/vagrant/etc/php/php.ini /etc/php/7.4/cli/conf.d
 cp /vagrant/vagrant/etc/php/xdebug.ini /etc/php/7.4/mods-available
 
 sed -i "s/user = www-data/user = vagrant/g" /etc/php/7.4/fpm/pool.d/www.conf
-sed -i "/group = www-data/group = vagrant/g" /etc/php/7.4/fpm/pool.d/www.conf
+sed -i "s/group = www-data/group = vagrant/g" /etc/php/7.4/fpm/pool.d/www.conf
 
 systemctl restart php7.4-fpm
 
 # Configure MySQL
-mysql -uroot -p -e "CREATE DATABASE app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-mysql -uroot -p -e "CREATE DATABASE app_tests CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-mysql -uroot -p -e "CREATE USER 'vagrant'@'%' IDENTIFIED BY '$mysqlpass'"
-mysql -uroot -p -e "GRANT ALL PRIVILEGES ON *.* TO 'vagrant'@'%' WITH GRANT OPTION"
-mysql -uroot -p -e "FLUSH PRIVILEGES"
+mysql -uroot -e "CREATE DATABASE app CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+mysql -uroot -e "CREATE DATABASE app_tests CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+mysql -uroot -e "CREATE USER 'vagrant'@'%' IDENTIFIED BY '$mysqlpass'"
+mysql -uroot -e "GRANT ALL PRIVILEGES ON *.* TO 'vagrant'@'%' WITH GRANT OPTION"
+mysql -uroot -e "FLUSH PRIVILEGES"
 
 sed -i "s/.*bind-address.*/bind-address = 0.0.0.0/" /etc/mysql/mysql.conf.d/mysqld.cnf
 

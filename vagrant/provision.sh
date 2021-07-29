@@ -7,8 +7,8 @@ export DEBIAN_FRONTEND=noninteractive
 echo "cd /vagrant" >> /home/vagrant/.profile
 
 # Install software
-apt-get update && apt-get install nginx mysql-server redis-server \
-    ruby ruby-dev libsqlite3-dev unzip unrar htop build-essential \
+apt-get update && apt-get install nginx mysql-server \
+    redis-server ruby ruby-dev libsqlite3-dev htop build-essential \
     php7.4-fpm php7.4-mysql php7.4-curl php7.4-cli php7.4-intl php7.4-gd php7.4-zip \
     php7.4-bcmath php7.4-mbstring php7.4-bz2 php7.4-xml php-xdebug php7.4-soap -y
 
